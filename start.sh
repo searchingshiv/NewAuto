@@ -4,7 +4,7 @@ then
   git clone https://github.com/searchingshiv/NewAuto.git /searchingshiv/NewAuto 
 else
   echo "Cloning Custom Repo from $UPSTREAM_REPO "
-  git clone $UPSTREAM_REPO /NewAuto
+  git clone $UPSTREAM_REPO https://github.com/searchingshiv/NewAuto
 fi
 cd /NewAuto
 pip3 install -U -r requirements.txt
