@@ -1,7 +1,7 @@
 FROM python:3.10.8-slim-buster
 
 # Update and install necessary packages
-RUN apt-get update --no-cache && \
+RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends git dos2unix supervisor && \
     apt-get clean && \
