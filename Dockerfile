@@ -1,11 +1,9 @@
 FROM python:3.10.8-slim-buster
 
 # Update and install necessary packages
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends git dos2unix supervisor && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y git dos2unix
 
 # Copy and install Python dependencies
 COPY requirements.txt /requirements.txt
@@ -19,8 +17,5 @@ WORKDIR /NewAuto
 COPY start.sh /start.sh
 RUN dos2unix /start.sh && chmod +x /start.sh
 
-# Copy the supervisord configuration file
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Set the command to run supervisord
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Set the command to run the start script
+CMD ["/bin/bash", "/start.sh"]
