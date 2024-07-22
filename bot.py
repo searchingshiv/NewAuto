@@ -77,8 +77,8 @@ class Bot(Client):
 
     async def keep_alive(self):
         """Periodically ping a URL to keep the bot alive."""
-        keep_alive_url = "https://auto-fifm.onrender.com"  # Replace with your keep-alive URL
-        interval = 2 * 60  # Ping every 25 minutes
+        keep_alive_url = "https://newauto-2.onrender.com"  # Replace with your keep-alive URL
+        interval = 5 * 60  # Ping every 25 minutes
 
         async with ClientSession() as session:
             while True:
