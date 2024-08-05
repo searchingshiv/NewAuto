@@ -1,14 +1,14 @@
 #!/bin/bash
 
-if [ -z "$UPSTREAM_REPO" ]; then
+if [ -z $UPSTREAM_REPO ]
+then
   echo "Cloning main Repository"
-  git clone https://github.com/searchingshiv/NewAuto.git /searchingshiv/NewAuto
+  git clone https://github.com/searchingshiv/NewAuto.git /NewAuto
 else
-  echo "Cloning Custom Repo from $UPSTREAM_REPO"
-  git clone "$UPSTREAM_REPO" /searchingshiv/NewAuto
+  echo "Cloning Custom Repo from" "$UPSTREAM_REPO"
+  git clone "$UPSTREAM_REPO" /NewAuto
 fi
-
-cd /searchingshiv/NewAuto || exit
+cd /NewAuto
 pip3 install -U -r requirements.txt
 echo "Starting Bot...."
 python3 bot.py
