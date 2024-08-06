@@ -46,12 +46,10 @@ BUTTONS1 = {}
 BUTTONS2 = {}
 SPELL_CHECK = {}
 # ENABLE_SHORTLINK = ""
-# DS_REACT = ["🔥", "❤️", "😍", "👍🏻", "🥱"]
 
 @Client.on_message((filters.group | filters.private) & filters.text & filters.incoming)
 async def give_filter(client, message):
     if message.chat.id != SUPPORT_CHAT_ID:
-        # await message.react(emoji=random.choice(DS_REACT))
         manual = await manual_filters(client, message)
         if manual == False:
             settings = await get_settings(message.chat.id)
@@ -70,11 +68,22 @@ async def give_filter(client, message):
         if total_results == 0:
             return
         else:
-            return await message.reply_text(
+            reply_message = return await message.reply_text(
                 text=f"<b>Hᴇʏ {message.from_user.mention} 😍,\n\nɪ ғᴏᴜɴᴅ {str(total_results)} ʀᴇsᴜʟᴛs ғᴏʀ ʏᴏᴜʀ ᴏ̨ᴜᴇʀʏ {search},\n\nʙᴜᴛ ɪ ᴄᴀɴ'ᴛ sᴇɴᴅ ʜᴇʀᴇ 🤞🏻 ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴏᴜʀ ʀᴇǫᴜᴇsᴛ ɢʀᴏᴜᴘ ᴛᴏ ɢᴇᴛ ✨\n\n</b>",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📝 Sᴇᴀʀᴄʜ ʜᴇʀᴇ ", url=f"https://t.me/+CZH0JaSwih44ZTM1")]])
-    )
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton("📝 Sᴇᴀʀᴄʜ ʜᴇʀᴇ ", url=f"https://t.me/+CZH0JaSwih44ZTM1")
+                        ]
+                    ]
+                ),
+                parse_mode=enums.ParseMode.HTML,
+            )
+            
+            await asyncio.sleep(5 * 60)
+            await reply_message.delete()
 
+# ===============[ ADDED A BETTER LOGIC FOR AUTO DELETE MESSAGE FROM SUPPORT GROUP ]=============== #
                 
 @Client.on_message(filters.private & filters.text & filters.incoming)
 async def pm_text(bot, message):
