@@ -1,4 +1,4 @@
-FROM python:3.10.8-slim-buster  FROM python:3.10.8-slim-buster
+FROM python:3.10.8-slim-buster  
 
 # Update and install necessary packages  RUN apt update && apt upgrade -y
 RUN apt update && \  RUN apt install git -y
