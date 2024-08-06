@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import asyncio
+from flask import Flask
 from aiohttp import ClientSession
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
@@ -53,7 +54,7 @@ class Bot(Client):
         await app.setup()
         bind_address = "0.0.0.0"
         await web.TCPSite(app, bind_address, PORT).start()
-        asyncio.create_task(self.keep_alive())  # Start the keep-alive task
+        # asyncio.create_task(self.keep_alive())  # Start the keep-alive task
 
     async def stop(self, *args):
         await super().stop()
@@ -75,23 +76,28 @@ class Bot(Client):
                 yield message
                 current += 1
 
-    async def keep_alive(self):
-        """Periodically ping a URL to keep the bot alive."""
-        keep_alive_url = "https://newauto-c4df.onrender.com"  # Replace with your keep-alive URL
-        interval = 5 * 60  # Ping every 25 minutes
+    # async def keep_alive(self):
+    #     """Periodically ping a URL to keep the bot alive."""
+    #     keep_alive_url = "https://newauto-c4df.onrender.com"  # Replace with your keep-alive URL
+    #     interval = 5 * 60  # Ping every 25 minutes
 
-        async with ClientSession() as session:
-            while True:
-                try:
-                    async with session.get(keep_alive_url) as response:
-                        if response.status == 200:
-                            logging.info("Keep-alive ping successful.")
-                        else:
-                            logging.warning(f"Keep-alive ping failed with status: {response.status}")
-                except Exception as e:
-                    logging.error(f"Keep-alive ping failed: {e}")
-                await asyncio.sleep(interval)
+    #     async with ClientSession() as session:
+    #         while True:
+    #             try:
+    #                 async with session.get(keep_alive_url) as response:
+    #                     if response.status == 200:
+    #                         logging.info("Keep-alive ping successful.")
+    #                     else:
+    #                         logging.warning(f"Keep-alive ping failed with status: {response.status}")
+    #             except Exception as e:
+    #                 logging.error(f"Keep-alive ping failed: {e}")
+    #             await asyncio.sleep(interval)
 
+app = Flask(__name__)
+
+@app.route('/alive')
+def alive():
+    return "I am alive!"
 
 app = Bot()
 app.run()
