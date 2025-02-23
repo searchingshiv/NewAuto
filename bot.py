@@ -1,28 +1,26 @@
+#(©) 𝚂𝙰𝙽𝙲𝙷𝙸𝚃 ♛⛧ 
 import logging
 import logging.config
 
-from aiohttp import web
-from LUCIFER import web_server
-
-# Get logging configurations
-logging.config.fileConfig('logging.conf')
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
 logging.getLogger("imdbpy").setLevel(logging.ERROR)
 
-from pyrogram.errors import BadRequest, Unauthorized
-from datetime import datetime
-from pytz import timezone
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
 from database.ia_filterdb import Media
 from database.users_chats_db import db
-from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR, TIMEZONE, LOG_CHANNEL, PORT
+from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR, LOG_CHANNEL, PORT
 from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
-LOGGER = logging.getLogger(__name__)
+from Script import script
+from plugins import web_server
 
+from aiohttp import web
+from datetime import date, datetime 
+
+import pytz
 class Bot(Client):
 
     def __init__(self):
@@ -32,7 +30,7 @@ class Bot(Client):
             api_hash=API_HASH,
             bot_token=BOT_TOKEN,
             workers=50,
-            plugins={"root": "LUCIFER"},
+            plugins={"root": "plugins"},
             sleep_threshold=5,
         )
 
@@ -46,25 +44,19 @@ class Bot(Client):
         temp.ME = me.id
         temp.U_NAME = me.username
         temp.B_NAME = me.first_name
-        temp.B_LINK = me.mention
         self.username = '@' + me.username
-        self.uptime = datetime.now()
-        curr = datetime.now(timezone(TIMEZONE))
-        date = curr.strftime('%d %B, %Y')
-        time = curr.strftime('%I:%M:%S %p')
+        logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
+        logging.info(LOG_STR)
+        logging.info(script.LOGO)
+        tz = pytz.timezone('Asia/Kolkata')
+        today = date.today()
+        now = datetime.now(tz)
+        time = now.strftime("%H:%M:%S %p")
+        await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
         app = web.AppRunner(await web_server())
         await app.setup()
         bind_address = "0.0.0.0"
         await web.TCPSite(app, bind_address, PORT).start()
-        logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
-        logging.info(LOG_STR)
-        if LOG_CHANNEL:
-            try:
-                await self.send_message(LOG_CHANNEL, text=f"<b>{me.mention} Rᴇsᴛᴀʀᴛᴇᴅ !!\n\n📅 Dᴀᴛᴇ : <code>{date}</code>\n⏰ Tɪᴍᴇ : <code>{time}</code>\n🌐 Tɪᴍᴇᴢᴏɴᴇ : <code>{TIMEZONE}</code>\n\n🉐 Vᴇʀsɪᴏɴ : <code>v{__version__}</code></b>")
-            except Unauthorized:
-                LOGGER.warning("Bot isn't able to send message to LOG_CHANNEL")
-            except BadRequest as e:
-                LOGGER.error(e)
 
     async def stop(self, *args):
         await super().stop()
@@ -112,3 +104,96 @@ class Bot(Client):
 
 app = Bot()
 app.run()
+# import sys
+# import glob
+# import importlib
+# from pathlib import Path
+# from pyrogram import idle
+# import logging
+# import logging.config
+
+# # Get logging configurations
+# logging.config.fileConfig('logging.conf')
+# logging.getLogger().setLevel(logging.INFO)
+# logging.getLogger("pyrogram").setLevel(logging.ERROR)
+# logging.getLogger("imdbpy").setLevel(logging.ERROR)
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# )
+# logging.getLogger("aiohttp").setLevel(logging.ERROR)
+# logging.getLogger("aiohttp.web").setLevel(logging.ERROR)
+
+
+# from pyrogram import Client, __version__
+# from pyrogram.raw.all import layer
+# from database.ia_filterdb import Media
+# from database.users_chats_db import db
+# from info import *
+# from utils import temp
+# from typing import Union, Optional, AsyncGenerator
+# from pyrogram import types
+# from Script import script 
+# from aiohttp import web
+
+# # import asyncio
+# # from pyrogram import idle
+# # from lazybot import LazyPrincessBot
+# # from util.keepalive import ping_server
+# # from lazybot.clients import initialize_clients
+
+
+# ppath = "plugins/*.py"
+# files = glob.glob(ppath)
+# LazyPrincessBot.start()
+# loop = asyncio.get_event_loop()
+
+
+# async def Lazy_start():
+#     print('\n')
+#     print('Initalizing Lazy Bot')
+#     bot_info = await LazyPrincessBot.get_me()
+#     LazyPrincessBot.username = bot_info.username
+#     await initialize_clients()
+#     for name in files:
+#         with open(name) as a:
+#             patt = Path(a.name)
+#             plugin_name = patt.stem.replace(".py", "")
+#             plugins_dir = Path(f"plugins/{plugin_name}.py")
+#             import_path = "plugins.{}".format(plugin_name)
+#             spec = importlib.util.spec_from_file_location(import_path, plugins_dir)
+#             load = importlib.util.module_from_spec(spec)
+#             spec.loader.exec_module(load)
+#             sys.modules["plugins." + plugin_name] = load
+#             print("Lazy Imported => " + plugin_name)
+#     if ON_HEROKU:
+#         asyncio.create_task(ping_server())
+#     b_users, b_chats = await db.get_banned()
+#     temp.BANNED_USERS = b_users
+#     temp.BANNED_CHATS = b_chats
+#     await Media.ensure_indexes()
+#     me = await LazyPrincessBot.get_me()
+#     temp.ME = me.id
+#     temp.U_NAME = me.username
+#     temp.B_NAME = me.first_name
+#     LazyPrincessBot.username = '@' + me.username
+#     logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
+#     logging.info(LOG_STR)
+#     logging.info(script.LOGO)
+#     tz = pytz.timezone('Asia/Kolkata')
+#     today = date.today()
+#     now = datetime.now(tz)
+#     time = now.strftime("%H:%M:%S %p")
+#     await LazyPrincessBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
+#     app = web.AppRunner(await web_server())
+#     await app.setup()
+#     bind_address = "0.0.0.0"
+#     await web.TCPSite(app, bind_address, PORT).start()
+#     await idle()
+
+
+# if __name__ == '__main__':
+#     try:
+#         loop.run_until_complete(Lazy_start())
+#     except KeyboardInterrupt:
+#         logging.info('Service Stopped Bye 👋')
