@@ -99,13 +99,6 @@ def ping_self():
     except Exception as e:
         logging.error(f"Ping failed with exception: {e}")
         
-@app.on_message(filters.command("start"))
-async def start(client, message):
-    await message.reply("Hello! I'm here to help.")
-def start_scheduler():
-    scheduler = BackgroundScheduler(timezone=pytz.utc)
-    scheduler.add_job(ping_self, 'interval', minutes=3)
-    scheduler.start()
 
 def run_flask():
     flask_app.run(host='0.0.0.0', port=8080)
