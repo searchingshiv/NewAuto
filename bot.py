@@ -105,7 +105,7 @@ def start_scheduler():
     scheduler.start()
 
 def run_flask():
-    flask_app.run(host='0.0.0.0', port=10001)
+    flask_app.run(host='0.0.0.0', port=8080)
 
 flask_app = Flask(__name__)
 
