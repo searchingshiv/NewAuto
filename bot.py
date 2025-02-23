@@ -1,27 +1,27 @@
 import logging
 import logging.config
-import asyncio
-import os
-import time
-import requests
-from flask import Flask
-from threading import Thread
-from aiohttp import ClientSession
+
+from aiohttp import web
+from LUCIFER import web_server
+
+# Get logging configurations
+logging.config.fileConfig('logging.conf')
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger("pyrogram").setLevel(logging.ERROR)
+logging.getLogger("imdbpy").setLevel(logging.ERROR)
+
+from pyrogram.errors import BadRequest, Unauthorized
+from datetime import datetime
+from pytz import timezone
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
 from database.ia_filterdb import Media
 from database.users_chats_db import db
-from apscheduler.schedulers.background import BackgroundScheduler
-from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR, LOG_CHANNEL, PORT
+from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR, TIMEZONE, LOG_CHANNEL, PORT
 from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
-from Script import script
-from plugins import web_server
-
-from aiohttp import web
-from datetime import date, datetime 
-import pytz
+LOGGER = logging.getLogger(__name__)
 
 class Bot(Client):
 
@@ -32,7 +32,7 @@ class Bot(Client):
             api_hash=API_HASH,
             bot_token=BOT_TOKEN,
             workers=50,
-            plugins={"root": "plugins"},
+            plugins={"root": "LUCIFER"},
             sleep_threshold=5,
         )
 
@@ -46,19 +46,25 @@ class Bot(Client):
         temp.ME = me.id
         temp.U_NAME = me.username
         temp.B_NAME = me.first_name
+        temp.B_LINK = me.mention
         self.username = '@' + me.username
-        logging.info(f"{me.first_name} with Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
-        logging.info(LOG_STR)
-        logging.info(script.LOGO)
-        tz = pytz.timezone('Asia/Kolkata')
-        today = date.today()
-        now = datetime.now(tz)
-        time = now.strftime("%H:%M:%S %p")
-        await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
+        self.uptime = datetime.now()
+        curr = datetime.now(timezone(TIMEZONE))
+        date = curr.strftime('%d %B, %Y')
+        time = curr.strftime('%I:%M:%S %p')
         app = web.AppRunner(await web_server())
         await app.setup()
         bind_address = "0.0.0.0"
         await web.TCPSite(app, bind_address, PORT).start()
+        logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
+        logging.info(LOG_STR)
+        if LOG_CHANNEL:
+            try:
+                await self.send_message(LOG_CHANNEL, text=f"<b>{me.mention} Rᴇsᴛᴀʀᴛᴇᴅ !!\n\n📅 Dᴀᴛᴇ : <code>{date}</code>\n⏰ Tɪᴍᴇ : <code>{time}</code>\n🌐 Tɪᴍᴇᴢᴏɴᴇ : <code>{TIMEZONE}</code>\n\n🉐 Vᴇʀsɪᴏɴ : <code>v{__version__}</code></b>")
+            except Unauthorized:
+                LOGGER.warning("Bot isn't able to send message to LOG_CHANNEL")
+            except BadRequest as e:
+                LOGGER.error(e)
 
     async def stop(self, *args):
         await super().stop()
@@ -70,51 +76,39 @@ class Bot(Client):
         limit: int,
         offset: int = 0,
     ) -> Optional[AsyncGenerator["types.Message", None]]:
+        """Iterate through a chat sequentially.
+        This convenience method does the same as repeatedly calling :meth:`~pyrogram.Client.get_messages` in a loop, thus saving
+        you from the hassle of setting up boilerplate code. It is useful for getting the whole chat messages with a
+        single call.
+        Parameters:
+            chat_id (``int`` | ``str``):
+                Unique identifier (int) or username (str) of the target chat.
+                For your personal cloud (Saved Messages) you can simply use "me" or "self".
+                For a contact that exists in your Telegram address book you can use his phone number (str).
+                
+            limit (``int``):
+                Identifier of the last message to be returned.
+                
+            offset (``int``, *optional*):
+                Identifier of the first message to be returned.
+                Defaults to 0.
+        Returns:
+            ``Generator``: A generator yielding :obj:`~pyrogram.types.Message` objects.
+        Example:
+            .. code-block:: python
+                for message in app.iter_messages("pyrogram", 1, 15000):
+                    print(message.text)
+        """
         current = offset
         while True:
             new_diff = min(200, limit - current)
             if new_diff <= 0:
                 return
-            messages = await self.get_messages(chat_id, list(range(current, current + new_diff + 1)))
+            messages = await self.get_messages(chat_id, list(range(current, current+new_diff+1)))
             for message in messages:
                 yield message
                 current += 1
 
-# ===============[ RENDER PORT UPTIME ISSUE FIXED ]================ #
-
-RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:5000")
-if RENDER_EXTERNAL_URL:
-    logging.info(f"Render URL detected: {RENDER_EXTERNAL_URL}")
-else:
-    logging.warning("Render URL not detected. Using default localhost URL.")
-
-def ping_self():
-    url = f"{RENDER_EXTERNAL_URL}/alive"
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            logging.info("Ping successful!")
-        else:
-            logging.error(f"Ping failed with status code {response.status_code}")
-    except Exception as e:
-        logging.error(f"Ping failed with exception: {e}")
-
-def start_scheduler():
-    scheduler = BackgroundScheduler(timezone=pytz.utc)
-    scheduler.add_job(ping_self, 'interval', minutes=3)
-    scheduler.start()
-
-def run_flask():
-    flask_app.run(host='0.0.0.0', port=10001)
-
-flask_app = Flask(__name__)
-
-@flask_app.route('/alive')
-def alive():
-    return "I am alive!"
-
-Thread(target=run_flask).start()
-start_scheduler()
 
 app = Bot()
 app.run()
