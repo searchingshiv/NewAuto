@@ -4,7 +4,7 @@ import asyncio
 import os
 import time
 import requests
-from flask import Flask
+from flask import Flask, request
 from threading import Thread
 from aiohttp import ClientSession
 from pyrogram import Client, __version__
@@ -18,13 +18,11 @@ from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
 from Script import script
 from plugins import web_server
-
 from aiohttp import web
 from datetime import date, datetime 
 import pytz
 
 class Bot(Client):
-
     def __init__(self):
         super().__init__(
             name=SESSION,
@@ -53,8 +51,8 @@ class Bot(Client):
         tz = pytz.timezone('Asia/Kolkata')
         today = date.today()
         now = datetime.now(tz)
-        time = now.strftime("%H:%M:%S %p")
-        await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
+        current_time = now.strftime("%H:%M:%S %p")
+        await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, current_time))
         app = web.AppRunner(await web_server())
         await app.setup()
         bind_address = "0.0.0.0"
@@ -64,12 +62,7 @@ class Bot(Client):
         await super().stop()
         logging.info("Bot stopped. Bye.")
 
-    async def iter_messages(
-        self,
-        chat_id: Union[int, str],
-        limit: int,
-        offset: int = 0,
-    ) -> Optional[AsyncGenerator["types.Message", None]]:
+    async def iter_messages(self, chat_id: Union[int, str], limit: int, offset: int = 0) -> Optional[AsyncGenerator["types.Message", None]]:
         current = offset
         while True:
             new_diff = min(200, limit - current)
@@ -83,10 +76,7 @@ class Bot(Client):
 # ===============[ RENDER PORT UPTIME ISSUE FIXED ]================ #
 
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:5000")
-if RENDER_EXTERNAL_URL:
-    logging.info(f"Render URL detected: {RENDER_EXTERNAL_URL}")
-else:
-    logging.warning("Render URL not detected. Using default localhost URL.")
+logging.info(f"Render URL detected: {RENDER_EXTERNAL_URL}")
 
 def ping_self():
     url = f"{RENDER_EXTERNAL_URL}/alive"
@@ -99,22 +89,24 @@ def ping_self():
     except Exception as e:
         logging.error(f"Ping failed with exception: {e}")
 
-def start_scheduler():
-    scheduler = BackgroundScheduler(timezone=pytz.utc)
-    scheduler.add_job(ping_self, 'interval', minutes=3)
-    scheduler.start()
-
-def run_flask():
-    flask_app.run(host='0.0.0.0', port=10001)
-
 flask_app = Flask(__name__)
 
 @flask_app.route('/alive')
 def alive():
     return "I am alive!"
 
+@flask_app.route('/webhook', methods=['POST'])
+def webhook():
+    update = request.get_json()
+    if update:
+        logging.info(f"Received update: {update}")  # Debugging
+        app.process_update(update)
+    return "OK", 200  # Required response for Telegram
+
+def run_flask():
+    flask_app.run(host='0.0.0.0', port=10001)  # Adjust port if necessary
+
 Thread(target=run_flask).start()
-start_scheduler()
 
 app = Bot()
 app.run()
