@@ -98,7 +98,10 @@ def ping_self():
             logging.error(f"Ping failed with status code {response.status_code}")
     except Exception as e:
         logging.error(f"Ping failed with exception: {e}")
-
+        
+@app.on_message(filters.command("start"))
+async def start(client, message):
+    await message.reply("Hello! I'm here to help.")
 def start_scheduler():
     scheduler = BackgroundScheduler(timezone=pytz.utc)
     scheduler.add_job(ping_self, 'interval', minutes=3)
