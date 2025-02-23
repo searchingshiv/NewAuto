@@ -2,8 +2,11 @@ import logging
 import logging.config
 import asyncio
 import os
+import time
 import requests
-from aiohttp import web
+from flask import Flask
+from threading import Thread
+from aiohttp import ClientSession
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
 from database.ia_filterdb import Media
@@ -14,9 +17,11 @@ from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
 from Script import script
+from plugins import web_server
 
-import pytz
+from aiohttp import web
 from datetime import date, datetime 
+import pytz
 
 class Bot(Client):
 
@@ -50,34 +55,32 @@ class Bot(Client):
         now = datetime.now(tz)
         time = now.strftime("%H:%M:%S %p")
         await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
-
-        # Start web server to handle webhook
-        app = web.Application()
-        app.router.add_get("/alive", self.alive)
-        app.router.add_post(f"/{BOT_TOKEN}", self.handle_update)
-
-        runner = web.AppRunner(app)
-        await runner.setup()
+        app = web.AppRunner(await web_server())
+        await app.setup()
         bind_address = "0.0.0.0"
-        site = web.TCPSite(runner, bind_address, PORT)
-        await site.start()
-
-        logging.info(f"Webhook server started on {bind_address}:{PORT}")
+        await web.TCPSite(app, bind_address, PORT).start()
 
     async def stop(self, *args):
         await super().stop()
         logging.info("Bot stopped. Bye.")
 
-    async def handle_update(self, request):
-        update = await request.json()
-        if update:
-            self.process_new_updates([types.Update.de_json(update)])
-        return web.Response(text="OK")
+    async def iter_messages(
+        self,
+        chat_id: Union[int, str],
+        limit: int,
+        offset: int = 0,
+    ) -> Optional[AsyncGenerator["types.Message", None]]:
+        current = offset
+        while True:
+            new_diff = min(200, limit - current)
+            if new_diff <= 0:
+                return
+            messages = await self.get_messages(chat_id, list(range(current, current + new_diff + 1)))
+            for message in messages:
+                yield message
+                current += 1
 
-    async def alive(self, request):
-        return web.Response(text="I am alive!")
-
-# ===============[ FIX RENDER PORT ISSUE ]================ #
+# ===============[ RENDER PORT UPTIME ISSUE FIXED ]================ #
 
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:5000")
 if RENDER_EXTERNAL_URL:
@@ -101,7 +104,17 @@ def start_scheduler():
     scheduler.add_job(ping_self, 'interval', minutes=3)
     scheduler.start()
 
-# Start bot
+def run_flask():
+    flask_app.run(host='0.0.0.0', port=10001)
+
+flask_app = Flask(__name__)
+
+@flask_app.route('/alive')
+def alive():
+    return "I am alive!"
+
+Thread(target=run_flask).start()
 start_scheduler()
+
 app = Bot()
 app.run()
