@@ -98,10 +98,14 @@ def ping_self():
             logging.error(f"Ping failed with status code {response.status_code}")
     except Exception as e:
         logging.error(f"Ping failed with exception: {e}")
-        
+
+def start_scheduler():
+    scheduler = BackgroundScheduler(timezone=pytz.utc)
+    scheduler.add_job(ping_self, 'interval', minutes=3)
+    scheduler.start()
 
 def run_flask():
-    flask_app.run(host='0.0.0.0', port=8080)
+    flask_app.run(host='0.0.0.0', port=10001)
 
 flask_app = Flask(__name__)
 
