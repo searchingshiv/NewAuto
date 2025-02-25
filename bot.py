@@ -75,7 +75,7 @@ class Bot(Client):
 
 # ===============[ RENDER PORT UPTIME ISSUE FIXED ]================ #
 
-RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:5000")
+RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
 logging.info(f"Render URL detected: {RENDER_EXTERNAL_URL}")
 
 def ping_self():
