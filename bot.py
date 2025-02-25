@@ -79,7 +79,7 @@ RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:50
 logging.info(f"Render URL detected: {RENDER_EXTERNAL_URL}")
 
 def ping_self():
-    url = f"{RENDER_EXTERNAL_URL}/alive"
+    url = "https://newauto-15.onrender.com/alive"
     try:
         response = requests.get(url)
         if response.status_code == 200:
