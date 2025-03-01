@@ -104,7 +104,7 @@ def webhook():
     return "OK", 200  # Required response for Telegram
 
 def run_flask():
-    flask_app.run(host='0.0.0.0', port=10001)  # Adjust port if necessary
+    flask_app.run(host='0.0.0.0', port=10002)  # Adjust port if necessary
 
 Thread(target=run_flask).start()
 
