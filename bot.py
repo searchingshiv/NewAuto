@@ -53,10 +53,10 @@ class Bot(Client):
         now = datetime.now(tz)
         current_time = now.strftime("%H:%M:%S %p")
         await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, current_time))
-        app = web.AppRunner(await web_server())
-        await app.setup()
-        bind_address = "0.0.0.0"
-        await web.TCPSite(app, bind_address, PORT).start()
+        # app = web.AppRunner(await web_server())
+        # await app.setup()
+        # bind_address = "0.0.0.0"
+        # await web.TCPSite(app, bind_address, PORT).start()
 
     async def stop(self, *args):
         await super().stop()
@@ -111,6 +111,12 @@ Thread(target=run_flask).start()
 async def main():
     await app.start()
     await app.idle()
+if __name__ == "__main__":
+    # Start the Flask server in a separate thread
+    Thread(target=run_flask).start()
+    
+    # Start the Pyrogram bot using asyncio
+    asyncio.run(main())
 
 app = Bot()
 app.run(main())
