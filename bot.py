@@ -108,5 +108,9 @@ def run_flask():
 
 Thread(target=run_flask).start()
 
+async def main():
+    await app.start()
+    await app.idle()
+
 app = Bot()
-app.run()
+app.run(main())
