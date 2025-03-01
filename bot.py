@@ -118,5 +118,15 @@ if __name__ == "__main__":
     # Start the Pyrogram bot using asyncio
     asyncio.run(main())
 
+def run_flask():
+    try:
+        flask_app.run(host='0.0.0.0', port=10002)
+    except OSError as e:
+        if "Address already in use" in str(e):
+            logging.error("Port 10002 in use! Trying alternate port...")
+            flask_app.run(host='0.0.0.0', port=10003)
+        else:
+            raise
+
 app = Bot()
 app.run(main())
