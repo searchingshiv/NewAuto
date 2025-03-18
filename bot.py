@@ -53,10 +53,6 @@ class Bot(Client):
         now = datetime.now(tz)
         current_time = now.strftime("%H:%M:%S %p")
         await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, current_time))
-        # app = web.AppRunner(await web_server())
-        # await app.setup()
-        # bind_address = "0.0.0.0"
-        # await web.TCPSite(app, bind_address, PORT).start()
 
     async def stop(self, *args):
         await super().stop()
@@ -73,10 +69,10 @@ class Bot(Client):
                 yield message
                 current += 1
 
-# ===============[ RENDER PORT UPTIME ISSUE FIXED ]================ #
+# Define the bot instance at the top to prevent NameError
+app = Bot()
 
-RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
-logging.info(f"Render URL detected: {RENDER_EXTERNAL_URL}")
+# ===============[ RENDER PORT UPTIME ISSUE FIXED ]================ #
 
 def ping_self():
     url = "https://newauto-15.onrender.com/alive"
@@ -98,35 +94,31 @@ def alive():
 @flask_app.route('/webhook', methods=['POST'])
 def webhook():
     update = request.get_json()
-    if update:
+    if update and app:  # Ensure app exists before processing update
         logging.info(f"Received update: {update}")  # Debugging
         app.process_update(update)
     return "OK", 200  # Required response for Telegram
-
-def run_flask():
-    flask_app.run(host='0.0.0.0', port=10002)  # Adjust port if necessary
-
-Thread(target=run_flask).start()
-
-async def main():
-    await app.start()
-    await app.idle()
-if __name__ == "__main__":
-    # Start the Flask server in a separate thread
-    Thread(target=run_flask).start()
-    
-    # Start the Pyrogram bot using asyncio
-    asyncio.run(main())
 
 def run_flask():
     try:
         flask_app.run(host='0.0.0.0', port=10002)
     except OSError as e:
         if "Address already in use" in str(e):
-            logging.error("Port 10002 in use! Trying alternate port...")
-            flask_app.run(host='0.0.0.0', port=10003)
+            logging.error("Port 10002 in use! Trying alternate port 5000...")
+            flask_app.run(host='0.0.0.0', port=5000)
         else:
             raise
 
-app = Bot()
-app.run(main())
+async def main():
+    await app.start()
+    await asyncio.Event().wait()
+
+
+if __name__ == "__main__":
+    # Start Flask in a separate thread
+    Thread(target=run_flask).start()
+    
+    # Start the bot
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+
